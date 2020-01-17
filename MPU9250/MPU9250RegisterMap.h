@@ -140,7 +140,7 @@
 #define FIFO_COUNTH      0x72
 #define FIFO_COUNTL      0x73
 #define FIFO_R_W         0x74
-#define WHO_AM_I_MPU9250 0x75 // Should return 0x71
+#define WHO_AM_I_MPU9250 0x75 // Should return 0x73
 #define XA_OFFSET_H      0x77
 #define XA_OFFSET_L      0x78
 #define YA_OFFSET_H      0x7A
