@@ -23,7 +23,7 @@ class MPU9250_
     const uint8_t MPU9250_ADDRESS {0x68};  // Device address when ADO = 0
     const uint8_t AK8963_ADDRESS {0x0C};   //  Address of magnetometer
 
-    const uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x71}; // 0x68????
+    const uint8_t MPU9250_WHOAMI_DEFAULT_VALUE {0x73}; // was originally 0x71 and was changed by Markus to 73 which my device showed
     const uint8_t AK8963_WHOAMI_DEFAULT_VALUE {0x48};
 
     // Set initial input parameters
@@ -52,15 +52,16 @@ class MPU9250_
 
     QuaternionFilter qFilter;
 
-    float magnetic_declination = -7.51; // Japan, 24th June
+    float magnetic_declination = +12.61; // Sydney 11.12.2019
 
 public:
 
     MPU9250_() : aRes(getAres()), gRes(getGres()), mRes(getMres()) {}
 
-    void setup(WireType& w = Wire)
+    bool setup(WireType& w = Wire)
     {
         wire = &w;
+        bool err=0;
 
         uint8_t m_whoami = 0x00;
         uint8_t a_whoami = 0x00;
@@ -68,7 +69,7 @@ public:
         m_whoami = isConnectedMPU9250();
         if (m_whoami)
         {
-            Serial.println("MPU9250 is online...");
+            //Serial.println("MPU9250 is online...");
             initMPU9250();
 
             a_whoami = isConnectedAK8963();
@@ -78,15 +79,20 @@ public:
             }
             else
             {
-                Serial.print("Could not connect to AK8963: 0x");
-                Serial.println(a_whoami);
+                //Serial.print("Could not connect to AK8963: 0x");
+                //Serial.println(a_whoami);
+                err = true;
             }
+
+            //SelfTest();
         }
         else
         {
-            Serial.print("Could not connect to MPU9250: 0x");
-            Serial.println(m_whoami);
+            //Serial.print("Could not connect to MPU9250: 0x");
+            //Serial.println(m_whoami);
+            err = true;
         }
+        return err;
     }
 
     void calibrateAccelGyro()
@@ -140,7 +146,10 @@ public:
         // get quaternion based on aircraft coordinate (Right-Hand, X-Forward, Z-Down)
         // acc[mg], gyro[deg/s], mag [mG]
         // gyro will be convert from [deg/s] to [rad/s] inside of this function
-        qFilter.update(-a[0], a[1], a[2], g[0], -g[1], -g[2], m[1], -m[0], m[2], q);
+
+        // changed by Markus, because the MPU9250 is mounted vertical
+        //qFilter.update(-a[0], a[1], a[2], g[0], -g[1], -g[2], m[1], -m[0], m[2], q);
+        qFilter.update(-a[0], -a[2], a[1], g[0], g[2], -g[1], m[1], -m[2], -m[0], q);
 
         if (!b_ahrs)
         {
